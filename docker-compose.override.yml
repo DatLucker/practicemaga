@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+    postgres:
+        image: postgres:latest
+        environment:
+            POSTGRES_DB: art_back
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_USER: postgres
+        ports:
+            - "5432:5432"
+
+    redis:
+        ports:
+            - "6379:6379"
+    backend:
+        ports:
+            - "8000:8002"
+        environment:
+            DB_CONNECTION_STRING: "postgresql+psycopg2://postgres:postgres@postgres:5432/art_back"
+            JWT_PRIVATE_KEY: /backend/secret/jwt-key
+            JWT_PUBLIC_KEY: /backend/secret/jwt-key.pub
+
+            DEBUG: "true"
+        depends_on:
+            - postgres
+            - redis
+    proxy:
+        build: proxy
+        ports:
+            - "80:80"
+    frontend:
+        build:
+            args:
+                NX_API_URL: ${NX_API_URL}
+                NX_TELEGRAM_DISCUSSION: ${NX_TELEGRAM_DISCUSSION}
+        depends_on:
+            - backend
